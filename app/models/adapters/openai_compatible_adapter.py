@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import json
 import logging
 from typing import Any
 
@@ -9,8 +8,8 @@ from openai import AsyncOpenAI
 from app.core.context import RunContext
 from app.core.exceptions import ProviderError
 from app.core.settings import settings
-from app.models.router import LLMResponse, LLMRouter, ToolCall
 from app.models.adapters.openai_adapter import _parse_openai_tool_calls
+from app.models.router import LLMResponse, LLMRouter
 
 logger = logging.getLogger(__name__)
 

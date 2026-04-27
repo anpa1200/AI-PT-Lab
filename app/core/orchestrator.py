@@ -1,12 +1,10 @@
 from __future__ import annotations
 
-import copy
 import logging
 from typing import Any
 
 from app.core.context import HookTrace, RunContext
-from app.core.exceptions import LabError
-from app.models.router import LLMRouter, LLMResponse
+from app.models.router import LLMResponse, LLMRouter
 from app.rag.pipeline import RAGPipeline
 from app.scoring.engine import ScoringEngine
 from app.telemetry.writer import TelemetryWriter
