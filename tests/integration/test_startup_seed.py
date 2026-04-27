@@ -6,7 +6,7 @@ no ChromaDB or disk I/O is required.
 """
 from __future__ import annotations
 
-from unittest.mock import MagicMock, call, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
@@ -89,23 +89,44 @@ async def test_seed_failure_does_not_raise(mock_pipeline):
 
 def test_health_endpoint_still_returns_ok(mock_pipeline):
     from fastapi.testclient import TestClient
+
     from app.api.main import app
 
-    client = TestClient(app)
-    resp = client.get("/health")
-    assert resp.status_code == 200
-    assert resp.json()["status"] == "ok"
+    with TestClient(app) as client:
+        resp = client.get("/health")
+        assert resp.status_code == 200
+        assert resp.json()["status"] == "ok"
 
 
 # ── Scenario list reflects both scenarios ─────────────────────────────────────
 
 def test_both_scenarios_listed(mock_pipeline):
     from fastapi.testclient import TestClient
+
     from app.api.main import app
 
-    client = TestClient(app)
-    resp = client.get("/api/v1/scenarios")
-    assert resp.status_code == 200
-    scenarios = resp.json()["scenarios"]
-    assert "soc_copilot" in scenarios
-    assert "code_assistant" in scenarios
+    with TestClient(app) as client:
+        resp = client.get("/api/v1/scenarios")
+        assert resp.status_code == 200
+        scenarios = resp.json()["scenarios"]
+        assert "soc_copilot" in scenarios
+        assert "code_assistant" in scenarios
+
+
+def test_lifespan_skips_seed_when_disabled(mock_pipeline):
+    from fastapi.testclient import TestClient
+
+    from app.api.main import app
+    from app.core.settings import settings
+
+    original = settings.seed_on_startup
+    try:
+        settings.seed_on_startup = False
+        with patch("app.api.main._seed_all_scenarios", new=AsyncMock()) as seed_mock:
+            with TestClient(app) as client:
+                resp = client.get("/health")
+
+        assert resp.status_code == 200
+        seed_mock.assert_not_awaited()
+    finally:
+        settings.seed_on_startup = original

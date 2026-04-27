@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import logging
 from typing import Any
 
@@ -172,6 +173,22 @@ class ScenarioOrchestrator:
             if not response.tool_calls:
                 return response.content
 
+            messages.append({
+                "role": "assistant",
+                "content": response.content or "",
+                "tool_calls": [
+                    {
+                        "id": tc.id,
+                        "type": "function",
+                        "function": {
+                            "name": tc.name,
+                            "arguments": json.dumps(tc.arguments),
+                        },
+                    }
+                    for tc in response.tool_calls
+                ],
+            })
+
             # Execute each tool call through the hook chain
             for tc in response.tool_calls:
                 args: dict[str, Any] = tc.arguments
@@ -200,20 +217,6 @@ class ScenarioOrchestrator:
                     "name": tc.name,
                     "content": str(result),
                 })
-
-            # Append assistant message with tool calls for the next round
-            messages.append({
-                "role": "assistant",
-                "content": response.content or "",
-                "tool_calls": [
-                    {
-                        "id": tc.id,
-                        "type": "function",
-                        "function": {"name": tc.name, "arguments": str(tc.arguments)},
-                    }
-                    for tc in response.tool_calls
-                ],
-            })
 
         ctx.emit_event("max_tool_rounds_reached", {"max_rounds": max_rounds})
         return "[Max tool rounds exceeded — last model response was a tool call]"

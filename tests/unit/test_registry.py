@@ -7,7 +7,6 @@ from app.core.exceptions import ModuleLoadError
 from app.vulnerabilities.base import VulnerabilityModule
 from app.vulnerabilities.registry import ModuleRegistry, get_registry, register
 
-
 # ── Helpers ──────────────────────────────────────────────────────────────────
 
 class _ModuleA(VulnerabilityModule):
@@ -196,8 +195,6 @@ def test_default_score_returns_empty_list():
 # ── @register decorator ───────────────────────────────────────────────────────
 
 def test_register_decorator_adds_to_global_registry():
-    initial = set(get_registry().list_available())
-
     @register
     class _DecoratedModule(VulnerabilityModule):
         @property

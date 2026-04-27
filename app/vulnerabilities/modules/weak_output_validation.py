@@ -7,19 +7,28 @@ from app.core.context import HookTrace, RunContext
 from app.vulnerabilities.base import VulnerabilityModule
 from app.vulnerabilities.registry import register
 
-# Patterns that a hardened system would strip before returning to the user
-_SENSITIVE_PATTERNS: list[tuple[str, str]] = [
-    (r"system prompt|system instruction", "system_prompt_leak"),
-    (r"<script[\s\S]*?>[\s\S]*?</script>", "xss_payload"),
-    (r"ignore (all |previous |prior )?(instructions?|directives?|rules?)", "prompt_injection_echo"),
-    (r"maintenance mode|system override", "adversarial_instruction_echo"),
-    (r"\b(?:\d{1,3}\.){3}\d{1,3}\b.*(?:admin|root|password|secret)", "credential_exposure"),
-    (r"```[\s\S]{500,}```", "large_code_block_exfil"),
+# Patterns that a hardened system would strip before returning to the user.
+# Each pattern is grouped so scenario config flags can selectively enable checks.
+_PATTERN_DEFINITIONS: list[tuple[str, str, str]] = [
+    (r"system prompt|system instruction", "system_prompt_leak", "sensitive"),
+    (r"<script[\s\S]*?>[\s\S]*?</script>", "xss_payload", "xss"),
+    (
+        r"ignore (all |previous |prior )?(instructions?|directives?|rules?)",
+        "prompt_injection_echo",
+        "injection",
+    ),
+    (r"maintenance mode|system override", "adversarial_instruction_echo", "injection"),
+    (
+        r"\b(?:\d{1,3}\.){3}\d{1,3}\b.*(?:admin|root|password|secret)",
+        "credential_exposure",
+        "sensitive",
+    ),
+    (r"```[\s\S]{500,}```", "large_code_block_exfil", "sensitive"),
 ]
 
-_COMPILED: list[tuple[re.Pattern[str], str]] = [
-    (re.compile(pattern, re.IGNORECASE), label)
-    for pattern, label in _SENSITIVE_PATTERNS
+_COMPILED: list[tuple[re.Pattern[str], str, str]] = [
+    (re.compile(pattern, re.IGNORECASE), label, category)
+    for pattern, label, category in _PATTERN_DEFINITIONS
 ]
 
 
@@ -73,6 +82,15 @@ class WeakOutputValidation(VulnerabilityModule):
         self._check_sensitive_data: bool = bool(
             config.get("check_sensitive_data", True)
         )
+        self._active_patterns: list[tuple[re.Pattern[str], str]] = [
+            (pattern, label)
+            for pattern, label, category in _COMPILED
+            if (
+                (category == "xss" and self._check_xss)
+                or (category == "injection" and self._check_injection_echo)
+                or (category == "sensitive" and self._check_sensitive_data)
+            )
+        ]
 
     # ── Hooks ─────────────────────────────────────────────────────────────────
 
@@ -87,7 +105,7 @@ class WeakOutputValidation(VulnerabilityModule):
             return
 
         findings: list[str] = []
-        for pattern, label in _COMPILED:
+        for pattern, label in self._active_patterns:
             if pattern.search(response):
                 findings.append(label)
 

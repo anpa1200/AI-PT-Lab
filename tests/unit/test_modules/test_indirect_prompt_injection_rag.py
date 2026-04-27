@@ -5,7 +5,6 @@ import pytest
 from app.core.context import RunContext
 from app.vulnerabilities.modules.indirect_prompt_injection_rag import (
     IndirectPromptInjectionRAG,
-    _DEFAULT_PAYLOAD,
 )
 
 

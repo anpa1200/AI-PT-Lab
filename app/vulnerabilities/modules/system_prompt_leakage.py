@@ -76,14 +76,12 @@ class SystemPromptLeakage(VulnerabilityModule):
         self._leak_threshold: int = int(
             config.get("leak_threshold", _DEFAULT_LEAK_THRESHOLD)
         )
-        self._stored_system_prompt: str = ""
-        self._leakage_detected: bool = False
 
     # ── Hooks ─────────────────────────────────────────────────────────────────
 
     def before_prompt(self, ctx: RunContext) -> None:
         """Capture the system prompt so we can compare it against the response later."""
-        self._stored_system_prompt = ctx.system_prompt or ""
+        ctx.metadata[f"{self.module_id}:stored_system_prompt"] = ctx.system_prompt or ""
 
     def before_response(self, ctx: RunContext) -> None:
         """
@@ -91,19 +89,18 @@ class SystemPromptLeakage(VulnerabilityModule):
         here.  We deliberately skip that step and log what would have been caught.
         """
         response = ctx.llm_response or ""
-        if not response or not self._stored_system_prompt:
+        stored = ctx.metadata.get(f"{self.module_id}:stored_system_prompt", "")
+        if not response or not stored:
             return
 
         # Check whether the response was triggered by an extraction attempt
         triggered_by = self._detect_trigger(ctx.user_input)
 
         # Check for verbatim fragments of the system prompt in the response
-        leaked = self._detect_leak(response)
+        leaked = self._detect_leak(response, stored)
 
         if not leaked and not triggered_by:
             return
-
-        self._leakage_detected = leaked
 
         ctx.emit_event("system_prompt_leak_detected", {
             "module": self.module_id,
@@ -176,9 +173,10 @@ class SystemPromptLeakage(VulnerabilityModule):
                 return phrase
         return ""
 
-    def _detect_leak(self, response: str) -> bool:
-        if not self._stored_system_prompt:
-            return False
-        prompt_ngrams = _ngrams(self._stored_system_prompt, self._leak_threshold)
+    def cleanup(self, ctx: RunContext) -> None:
+        ctx.metadata.pop(f"{self.module_id}:stored_system_prompt", None)
+
+    def _detect_leak(self, response: str, stored_system_prompt: str) -> bool:
+        prompt_ngrams = _ngrams(stored_system_prompt, self._leak_threshold)
         response_ngrams = _ngrams(response, self._leak_threshold)
         return bool(prompt_ngrams & response_ngrams)

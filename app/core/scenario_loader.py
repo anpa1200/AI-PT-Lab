@@ -14,8 +14,41 @@ from app.vulnerabilities.registry import get_registry
 
 logger = logging.getLogger(__name__)
 
+_PROVIDER_OVERRIDE_SAFE_KEYS = {
+    "temperature",
+    "max_tokens",
+    "timeout_seconds",
+}
 
-def build_orchestrator(scenario_id: str) -> ScenarioOrchestrator:
+
+def _resolve_provider_config(
+    scenario: dict[str, Any],
+    provider_override: str | None = None,
+) -> tuple[str, dict[str, Any]]:
+    provider_block = dict(scenario.get("provider", {}))
+    default_provider_name: str = provider_block.get("name", "openai")
+    provider_name = provider_override or default_provider_name
+
+    provider_cfg = load_provider(provider_name)
+    if provider_override:
+        provider_cfg.update(
+            {
+                key: value
+                for key, value in provider_block.items()
+                if key in _PROVIDER_OVERRIDE_SAFE_KEYS
+            }
+        )
+    else:
+        provider_cfg.update(provider_block)
+
+    provider_cfg["name"] = provider_name
+    return provider_name, provider_cfg
+
+
+def build_orchestrator(
+    scenario_id: str,
+    provider_override: str | None = None,
+) -> ScenarioOrchestrator:
     """
     Load a scenario config and construct a fully wired ScenarioOrchestrator.
 
@@ -44,10 +77,10 @@ def build_orchestrator(scenario_id: str) -> ScenarioOrchestrator:
     logger.info("Loaded modules: %s", [m.module_id for m in modules])
 
     # ── LLM provider ────────────────────────────────────────────────────────
-    provider_block: dict[str, Any] = scenario.get("provider", {})
-    provider_name: str = provider_block.get("name", "openai")
-    provider_cfg = load_provider(provider_name)
-    provider_cfg.update(provider_block)   # scenario-level overrides win
+    provider_name, provider_cfg = _resolve_provider_config(
+        scenario,
+        provider_override=provider_override,
+    )
     llm_router = build_llm_router(provider_cfg)
     logger.info("LLM provider: %s model: %s", provider_name, provider_cfg.get("model"))
 

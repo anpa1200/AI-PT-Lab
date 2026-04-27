@@ -68,7 +68,39 @@ class ScoringEngine:
 
     # ── YAML rule evaluators ──────────────────────────────────────────────────
 
+    @staticmethod
+    def _normalize_rule(rule: dict[str, Any]) -> dict[str, Any]:
+        """Convert the flat YAML shorthand into the canonical condition-dict format."""
+        if "condition" in rule or "type" not in rule:
+            return rule
+        rule_type = rule["type"]
+        condition: dict[str, Any]
+        if rule_type == "event_type":
+            condition = {"event_type_present": rule["event_type"]}
+        elif rule_type == "pattern":
+            condition = {
+                "response_matches_pattern": {
+                    "field": rule.get("field", "final_response"),
+                    "patterns": [rule["pattern"]],
+                }
+            }
+        elif rule_type == "tool_call":
+            condition = {"tool_call_matches": {"tool_name": rule["tool_name"]}}
+        elif rule_type == "hook_trace":
+            condition = {
+                "hook_trace_contains": {
+                    "hook_point": rule.get("hook_point"),
+                    "module_id": rule.get("module_id"),
+                    "field": rule.get("field", "mutations"),
+                    "value": rule.get("value", ""),
+                }
+            }
+        else:
+            condition = {}
+        return {**rule, "condition": condition}
+
     def _evaluate_yaml_rule(self, rule: dict[str, Any], ctx: RunContext) -> dict[str, Any]:
+        rule = self._normalize_rule(rule)
         condition = rule.get("condition", {})
         passed = False
         evidence_text = "Condition not met"

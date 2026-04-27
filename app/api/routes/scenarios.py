@@ -7,7 +7,7 @@ from pydantic import BaseModel
 
 from app.core.config_loader import list_scenarios, load_scenario
 from app.core.context import RunContext
-from app.core.exceptions import ModuleLoadError, ScenarioNotFound
+from app.core.exceptions import ConfigError, ModuleLoadError, ScenarioNotFound
 from app.core.scenario_loader import build_orchestrator
 from app.vulnerabilities.registry import get_registry
 
@@ -90,10 +90,13 @@ async def run_scenario(req: RunRequest) -> RunResponse:
     logger.info("Run request: scenario=%s input_len=%d", req.scenario_id, len(req.user_input))
 
     try:
-        orchestrator = build_orchestrator(req.scenario_id)
+        orchestrator = build_orchestrator(
+            req.scenario_id,
+            provider_override=req.provider_override,
+        )
     except ScenarioNotFound as exc:
         raise HTTPException(status_code=404, detail=str(exc))
-    except ModuleLoadError as exc:
+    except (ConfigError, ModuleLoadError, ValueError) as exc:
         raise HTTPException(status_code=422, detail=str(exc))
     except Exception as exc:
         logger.exception("Failed to build orchestrator for scenario %s", req.scenario_id)
@@ -161,24 +164,10 @@ async def reset_scenario(scenario_id: str) -> dict:
         return {"status": "ok", "message": "RAG not enabled for this scenario — nothing to reset"}
 
     try:
-        from app.rag.pipeline import RAGPipeline
+        from app.rag.pipeline import RAGPipeline, seed_scenario
         pipeline = RAGPipeline.from_config(rag_cfg)
         pipeline.reset()
-
-        seeded = 0
-        seed_cfg = scenario.get("seed", {})
-        if seed_cfg.get("incidents"):
-            from pathlib import Path
-            seeded += pipeline.seed_from_jsonl(Path(seed_cfg["incidents"]))
-
-        kb_dir_cfg = rag_cfg.get("datasets", [])
-        for dataset_path in kb_dir_cfg:
-            from pathlib import Path
-            p = Path(dataset_path)
-            if p.is_dir():
-                seeded += pipeline.seed_from_directory(p)
-            elif p.is_file():
-                seeded += pipeline.seed_from_jsonl(p)
+        seeded = seed_scenario(pipeline, scenario)
 
     except Exception as exc:
         logger.exception("Reset failed for scenario %s", scenario_id)

@@ -1,17 +1,16 @@
 from __future__ import annotations
 
-from unittest.mock import AsyncMock, MagicMock, patch
-from typing import Any
+import json
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from app.core.context import HookTrace, RunContext
+from app.core.context import RunContext
 from app.core.orchestrator import ScenarioOrchestrator
 from app.models.router import LLMResponse, ToolCall
 from app.scoring.engine import ScoringEngine
 from app.telemetry.writer import TelemetryWriter
 from app.vulnerabilities.base import VulnerabilityModule
-
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -357,3 +356,35 @@ async def test_run_with_tool_call_executes_tool():
     assert result.final_response == "I found INC-001."
     assert len(result.tool_calls) == 1
     assert result.tool_calls[0]["name"] == "search_incidents"
+
+
+@pytest.mark.asyncio
+async def test_tool_loop_appends_assistant_before_tool_results_and_serializes_arguments():
+    tc = ToolCall(id="call-1", name="search_incidents", arguments={"query": "brute force"})
+    first = LLMResponse(content="Calling tool", tool_calls=[tc])
+    second = LLMResponse(content="I found INC-001.")
+
+    mock_llm = AsyncMock()
+    mock_llm.complete = AsyncMock(side_effect=[first, second])
+
+    tool_exec = MagicMock()
+    tool_exec.execute = AsyncMock(return_value=[{"id": "INC-001", "title": "Brute force"}])
+    tool_exec.to_openai_schema = MagicMock(return_value=[])
+
+    orch = ScenarioOrchestrator(
+        modules=[],
+        llm_router=mock_llm,
+        rag_pipeline=None,
+        tool_executor=tool_exec,
+        scoring_engine=ScoringEngine([]),
+        telemetry_writer=AsyncMock(spec=TelemetryWriter),
+        scenario_config={"system_prompt": ""},
+    )
+
+    await orch.run(_ctx("search brute force"))
+
+    second_call_messages = mock_llm.complete.await_args_list[1].kwargs["messages"]
+    assert [m["role"] for m in second_call_messages] == ["user", "assistant", "tool"]
+    assert second_call_messages[1]["tool_calls"][0]["function"]["arguments"] == json.dumps(
+        {"query": "brute force"}
+    )

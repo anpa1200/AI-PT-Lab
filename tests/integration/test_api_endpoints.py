@@ -3,15 +3,9 @@ from __future__ import annotations
 from unittest.mock import AsyncMock, patch
 
 import pytest
-from fastapi.testclient import TestClient
 
-from app.api.main import app
+from app.core.context import RunContext
 from app.models.router import LLMResponse
-
-
-@pytest.fixture
-def client() -> TestClient:
-    return TestClient(app)
 
 
 @pytest.fixture
@@ -114,6 +108,7 @@ def test_get_scenario_info_returns_vulnerability_modules(client):
     resp = client.get("/api/v1/scenarios/soc_copilot")
     assert resp.status_code == 200
     mods = resp.json()["vulnerability_modules"]
+    assert "direct_prompt_injection" in mods
     assert "indirect_prompt_injection_rag" in mods
     assert "insecure_tool_invocation" in mods
     assert "weak_output_validation" in mods
@@ -123,6 +118,7 @@ def test_get_scenario_info_code_assistant_modules(client):
     resp = client.get("/api/v1/scenarios/code_assistant")
     assert resp.status_code == 200
     mods = resp.json()["vulnerability_modules"]
+    assert "direct_prompt_injection" in mods
     assert "indirect_prompt_injection_rag" in mods
     assert "system_prompt_leakage" in mods
     assert "insecure_tool_invocation" in mods
@@ -139,6 +135,7 @@ def test_list_modules(client):
     resp = client.get("/api/v1/modules")
     assert resp.status_code == 200
     modules = resp.json()["modules"]
+    assert "direct_prompt_injection" in modules
     assert "indirect_prompt_injection_rag" in modules
     assert "insecure_tool_invocation" in modules
     assert "weak_output_validation" in modules
@@ -187,6 +184,7 @@ def test_run_soc_copilot_has_all_modules_active(client, mock_llm):
     })
     assert resp.status_code == 200
     active = resp.json()["active_modules"]
+    assert "direct_prompt_injection" in active
     assert "indirect_prompt_injection_rag" in active
     assert "insecure_tool_invocation" in active
     assert "weak_output_validation" in active
@@ -235,6 +233,7 @@ def test_run_code_assistant_has_correct_modules(client, mock_llm_code):
     })
     assert resp.status_code == 200
     active = resp.json()["active_modules"]
+    assert "direct_prompt_injection" in active
     assert "indirect_prompt_injection_rag" in active
     assert "system_prompt_leakage" in active
     assert "insecure_tool_invocation" in active
@@ -257,6 +256,26 @@ def test_run_code_assistant_has_score_result(client, mock_llm_code):
     })
     assert resp.status_code == 200
     assert resp.json()["score_result"] is not None
+
+
+def test_run_passes_provider_override_to_builder(client):
+    fake_orchestrator = AsyncMock()
+    ctx = RunContext(scenario_id="soc_copilot", user_input="hello")
+    ctx.final_response = "Provider override ok."
+    fake_orchestrator.run = AsyncMock(return_value=ctx)
+
+    with patch(
+        "app.api.routes.scenarios.build_orchestrator",
+        return_value=fake_orchestrator,
+    ) as build_mock:
+        resp = client.post("/api/v1/run", json={
+            "scenario_id": "soc_copilot",
+            "user_input": "hello",
+            "provider_override": "anthropic",
+        })
+
+    assert resp.status_code == 200
+    build_mock.assert_called_once_with("soc_copilot", provider_override="anthropic")
 
 
 # ── Error cases ───────────────────────────────────────────────────────────────

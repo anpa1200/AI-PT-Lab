@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import asyncio
 import json
-from typing import Optional
 
 import typer
 from rich.console import Console
@@ -124,7 +123,7 @@ def list_modules_cmd() -> None:
 
 @app.command(name="validate-config")
 def validate_config(
-    scenario: Optional[str] = typer.Argument(None, help="Scenario ID to validate (default: all)"),
+    scenario: str | None = typer.Argument(None, help="Scenario ID to validate (default: all)"),
 ) -> None:
     """Validate scenario YAML configs."""
     _boot()

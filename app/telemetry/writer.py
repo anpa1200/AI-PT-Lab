@@ -17,7 +17,7 @@ class TelemetryWriter:
         self._dir.mkdir(parents=True, exist_ok=True)
 
     @classmethod
-    def default(cls) -> "TelemetryWriter":
+    def default(cls) -> TelemetryWriter:
         return cls(Path(settings.data_dir) / "telemetry")
 
     async def flush(self, ctx: RunContext) -> None:

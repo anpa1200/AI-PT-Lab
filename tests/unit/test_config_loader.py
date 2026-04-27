@@ -1,8 +1,5 @@
 from __future__ import annotations
 
-import os
-from pathlib import Path
-
 import pytest
 
 from app.core.config_loader import _walk, list_scenarios, load_yaml

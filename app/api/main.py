@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import logging
 from contextlib import asynccontextmanager
-from pathlib import Path
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -21,7 +20,7 @@ async def _seed_all_scenarios() -> None:
     If LAB_RESET_ON_STARTUP=true, wipe and re-seed every collection.
     Failures are logged as warnings — they must not prevent startup.
     """
-    from app.rag.pipeline import RAGPipeline
+    from app.rag.pipeline import RAGPipeline, seed_scenario
 
     for scenario_id in list_scenarios():
         try:
@@ -32,32 +31,20 @@ async def _seed_all_scenarios() -> None:
                 continue
 
             pipeline = RAGPipeline.from_config(rag_cfg)
+            existing_docs = pipeline.count()
 
             if settings.reset_on_startup:
                 pipeline.reset()
                 logger.info("Collection reset (LAB_RESET_ON_STARTUP): scenario=%s", scenario_id)
 
-            if pipeline.count() > 0 and not settings.reset_on_startup:
+            if existing_docs > 0 and not settings.reset_on_startup:
                 logger.info(
                     "Collection already seeded (%d docs), skipping: scenario=%s",
-                    pipeline.count(), scenario_id,
+                    existing_docs, scenario_id,
                 )
                 continue
 
-            seeded = 0
-            seed_cfg = scenario.get("seed", {}) or {}
-            if seed_cfg.get("incidents"):
-                p = Path(seed_cfg["incidents"])
-                if p.exists():
-                    seeded += pipeline.seed_from_jsonl(p)
-
-            for ds_path in rag_cfg.get("datasets", []):
-                p = Path(ds_path)
-                if p.is_dir():
-                    seeded += pipeline.seed_from_directory(p)
-                elif p.is_file():
-                    seeded += pipeline.seed_from_jsonl(p)
-
+            seeded = seed_scenario(pipeline, scenario)
             logger.info("Seeded %d documents: scenario=%s", seeded, scenario_id)
 
         except Exception:
@@ -76,7 +63,10 @@ async def lifespan(app: FastAPI):
     registered = get_registry().list_available()
     logger.info("Registered vulnerability modules: %s", registered)
 
-    await _seed_all_scenarios()
+    if settings.seed_on_startup:
+        await _seed_all_scenarios()
+    else:
+        logger.info("Skipping scenario auto-seed (LAB_SEED_ON_STARTUP=false)")
 
     yield
     logger.info("Vulnerable AI Lab shutting down.")

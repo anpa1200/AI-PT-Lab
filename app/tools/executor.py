@@ -1,7 +1,8 @@
 from __future__ import annotations
 
 import logging
-from typing import Any, Awaitable, Callable
+from collections.abc import Awaitable, Callable
+from typing import Any
 
 from app.core.context import RunContext
 from app.core.exceptions import ToolSandboxError
@@ -145,7 +146,7 @@ class ToolExecutor:
         self._registered_tools.append(tool_id)
 
     @classmethod
-    def from_config(cls, tools_config: list[dict[str, Any]]) -> "ToolExecutor":
+    def from_config(cls, tools_config: list[dict[str, Any]]) -> ToolExecutor:
         from app.tools import sandboxed_tools
 
         executor = cls()

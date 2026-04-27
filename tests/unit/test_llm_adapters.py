@@ -1,9 +1,7 @@
 from __future__ import annotations
 
 import json
-from types import SimpleNamespace
-from typing import Any
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
@@ -20,8 +18,7 @@ from app.models.adapters.ollama_adapter import (
     _parse_ollama_tool_calls,
 )
 from app.models.adapters.openai_adapter import OpenAIAdapter, _parse_openai_tool_calls
-from app.models.router import LLMResponse, ToolCall, build_llm_router
-
+from app.models.router import LLMResponse, build_llm_router
 
 # ── Fixtures ──────────────────────────────────────────────────────────────────
 
@@ -173,7 +170,6 @@ async def test_openai_adapter_emits_events(ctx, simple_messages):
 
 @pytest.mark.asyncio
 async def test_openai_adapter_raises_provider_error_on_api_failure(ctx, simple_messages):
-    from openai import APIError, APIStatusError
     adapter = OpenAIAdapter({"provider": "openai", "model": "gpt-4o-mini"})
     adapter._client.chat.completions.create = AsyncMock(
         side_effect=Exception("connection refused")

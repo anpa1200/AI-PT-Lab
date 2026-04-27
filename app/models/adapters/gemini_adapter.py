@@ -15,10 +15,13 @@ class GeminiAdapter(LLMRouter):
     def __init__(self, config: dict[str, Any]) -> None:
         self._config = config
         self._model_name = config.get("model", "gemini-2.0-flash")
-        self._client = None  # lazy-init to avoid import cost at startup
+        self._client = None          # lazy-init to avoid import cost at startup
+        self._client_system: str = ""  # system prompt the cached client was built for
 
-    def _get_client(self):
-        if self._client is None:
+    def _get_client(self, system_instruction: str = ""):
+        # Recreate the model whenever the system instruction changes — it is baked
+        # into GenerativeModel at construction time, not passed per-call.
+        if self._client is None or self._client_system != system_instruction:
             try:
                 import google.generativeai as genai
             except ImportError as exc:
@@ -28,7 +31,11 @@ class GeminiAdapter(LLMRouter):
                 ) from exc
             api_key = settings.google_api_key or self._config.get("api_key", "")
             genai.configure(api_key=api_key)
-            self._client = genai.GenerativeModel(self._model_name)
+            self._client = genai.GenerativeModel(
+                self._model_name,
+                system_instruction=system_instruction or None,
+            )
+            self._client_system = system_instruction
         return self._client
 
     async def complete(
@@ -44,8 +51,8 @@ class GeminiAdapter(LLMRouter):
         logger.debug("Gemini call: model=%s messages=%d", model, len(messages))
 
         try:
-            client = self._get_client()
             gemini_messages, system_prompt = _convert_messages(messages)
+            client = self._get_client(system_prompt)
 
             generation_config = {
                 "temperature": self._config.get("temperature", 0.2),

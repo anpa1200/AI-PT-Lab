@@ -47,7 +47,7 @@ class RAGPipeline:
         )
 
     @classmethod
-    def from_config(cls, config: dict[str, Any]) -> "RAGPipeline":
+    def from_config(cls, config: dict[str, Any]) -> RAGPipeline:
         return cls(
             collection_name=config["collection"],
             embedding_model=config.get("embedding_model", "all-MiniLM-L6-v2"),
@@ -171,6 +171,7 @@ class RAGPipeline:
 
     # ── Internals ─────────────────────────────────────────────────────────────
 
+
     @staticmethod
     def _build_client():
         try:
@@ -195,3 +196,27 @@ class RAGPipeline:
                 "sentence-transformers not installed — run: pip install sentence-transformers"
             ) from exc
         return SentenceTransformerEmbeddingFunction(model_name=model_name)
+
+
+def seed_scenario(pipeline: RAGPipeline, scenario: dict[str, Any]) -> int:
+    """
+    Seed a RAGPipeline from a scenario's seed + rag.datasets config.
+
+    Shared by startup seeding (main.py) and the /reset API endpoint so the
+    logic stays in one place.  Returns the total number of documents seeded.
+    """
+    seeded = 0
+    seed_cfg = scenario.get("seed") or {}
+    if seed_cfg.get("incidents"):
+        p = Path(seed_cfg["incidents"])
+        if p.exists():
+            seeded += pipeline.seed_from_jsonl(p)
+
+    for ds_path in scenario.get("rag", {}).get("datasets", []):
+        p = Path(ds_path)
+        if p.is_dir():
+            seeded += pipeline.seed_from_directory(p)
+        elif p.is_file():
+            seeded += pipeline.seed_from_jsonl(p)
+
+    return seeded

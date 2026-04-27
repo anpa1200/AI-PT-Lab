@@ -48,13 +48,13 @@ def test_custom_leak_threshold():
 def test_before_prompt_captures_system_prompt(module):
     ctx = _ctx_with_system_prompt()
     module.before_prompt(ctx)
-    assert module._stored_system_prompt == _SYSTEM_PROMPT
+    assert ctx.metadata["system_prompt_leakage:stored_system_prompt"] == _SYSTEM_PROMPT
 
 
 def test_before_prompt_empty_system_prompt(module, ctx):
     ctx.system_prompt = ""
     module.before_prompt(ctx)
-    assert module._stored_system_prompt == ""
+    assert ctx.metadata["system_prompt_leakage:stored_system_prompt"] == ""
 
 
 # ── before_response ───────────────────────────────────────────────────────────
