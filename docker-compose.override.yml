@@ -1,0 +1,19 @@
+# Development overrides — loaded automatically by docker compose.
+# Production: use docker compose -f docker-compose.yml directly.
+services:
+  backend:
+    volumes:
+      # Bind-mount source so code changes reload without rebuilding
+      - ./app:/app/app:ro
+      - ./configs:/app/configs:ro
+      - ./datasets:/app/datasets:ro
+      - ./scripts:/app/scripts:ro
+    environment:
+      - LAB_LOG_LEVEL=DEBUG
+    command: >
+      uvicorn app.api.main:app
+      --host 0.0.0.0
+      --port 8000
+      --reload
+      --reload-dir /app/app
+      --log-level debug

@@ -1,0 +1,8 @@
+provider: openai_compatible
+model: mistralai/Mistral-7B-Instruct-v0.3
+temperature: 0.2
+max_tokens: 2048
+timeout_seconds: 120
+base_url_env: VLLM_BASE_URL
+# vLLM exposes an OpenAI-compatible /v1 endpoint — no API key needed locally
+api_key: "EMPTY"

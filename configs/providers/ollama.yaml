@@ -1,0 +1,10 @@
+provider: ollama
+model: llama3.2
+temperature: 0.2
+max_tokens: 2048
+timeout_seconds: 120
+base_url_env: OLLAMA_BASE_URL
+
+# Models known to support native tool/function calling:
+#   llama3.1, llama3.2, mistral-nemo, qwen2.5
+# Models without native tool support fall back to JSON parsing from content.

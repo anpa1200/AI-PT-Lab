@@ -1,0 +1,6 @@
+provider: gemini
+model: gemini-2.0-flash
+temperature: 0.2
+max_tokens: 2048
+timeout_seconds: 60
+api_key_env: GOOGLE_API_KEY

@@ -1,0 +1,31 @@
+lab:
+  name: "Vulnerable AI Lab"
+  version: "0.1.0"
+  data_dir: "${LAB_DATA_DIR:/app/data}"
+  log_level: "${LAB_LOG_LEVEL:INFO}"
+
+  telemetry:
+    backend: jsonl
+    path: "${LAB_DATA_DIR:/app/data}/telemetry"
+    flush_interval_seconds: 1
+
+session:
+  isolation: per_request
+  max_concurrent: "${LAB_MAX_CONCURRENT_SESSIONS:10}"
+  timeout_seconds: 120
+
+safety:
+  synthetic_data_only: true
+  block_external_network: true
+  require_tool_confirmation: false
+  allowed_tool_egress: []
+
+logging:
+  level: "${LAB_LOG_LEVEL:INFO}"
+  output:
+    - jsonl
+    - sqlite
+  include_prompts: true
+  include_responses: true
+  include_tool_calls: true
+  include_hook_traces: true

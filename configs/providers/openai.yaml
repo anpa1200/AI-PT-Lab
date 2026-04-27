@@ -1,0 +1,9 @@
+provider: openai
+model: gpt-4o-mini
+temperature: 0.2
+max_tokens: 2048
+timeout_seconds: 60
+api_key_env: OPENAI_API_KEY
+
+# Optional: use a custom base_url for OpenAI-compatible endpoints
+# base_url: https://api.openai.com/v1

@@ -1,0 +1,6 @@
+provider: anthropic
+model: claude-haiku-4-5-20251001
+temperature: 0.2
+max_tokens: 2048
+timeout_seconds: 60
+api_key_env: ANTHROPIC_API_KEY

@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(docker --version)",
+      "Bash(docker compose *)",
+      "Bash(wait)",
+      "Bash(python -m pytest tests/ -x -q)",
+      "Bash(conda run *)",
+      "Bash(conda env *)",
+      "Bash(/home/andrey/.miniforge3/bin/python -c \"import fastapi\")",
+      "Bash(python3.12 -c \"import fastapi; print\\('ok'\\)\")",
+      "Bash(python3.12 -m pytest tests/ -x -q)",
+      "Bash(python3.12 -m pytest tests/ -q)",
+      "Bash(python3.12 -m app.cli.main list-scenarios)",
+      "Bash(python3.12 -m app.cli.main validate-config)",
+      "Bash(python3.12 scripts/seed_db.py --help)"
+    ]
+  }
+}
