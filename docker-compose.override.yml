@@ -17,3 +17,7 @@ services:
       --reload
       --reload-dir /app/app
       --log-level info
+
+  ui:
+    environment:
+      - NGINX_ENTRYPOINT_QUIET_LOGS=1

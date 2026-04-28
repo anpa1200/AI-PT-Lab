@@ -54,9 +54,17 @@ async def _seed_all_scenarios() -> None:
             )
 
 
+_NOISY_LOGGERS = [
+    "httpx", "httpcore", "huggingface_hub", "huggingface_hub.utils._http",
+    "sentence_transformers", "transformers", "filelock",
+]
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     logging.basicConfig(level=settings.log_level)
+    for name in _NOISY_LOGGERS:
+        logging.getLogger(name).setLevel(logging.WARNING)
     logger.info("Vulnerable AI Lab starting up...")
 
     get_registry().autodiscover()
