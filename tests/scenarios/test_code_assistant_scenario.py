@@ -87,7 +87,7 @@ class TestRAGInjectionCodeAssistant:
         orch = _make_orch([self._mod()], rag_docs=[])
         ctx = RunContext(scenario_id="code_assistant", user_input="Review PR-42")
         ctx = await orch.run(ctx)
-        assert "SYSTEM OVERRIDE" in ctx.augmented_prompt
+        assert "INC-2024-0847" in ctx.augmented_prompt
 
     async def test_adversarial_approval_response(self):
         orch = _make_orch(

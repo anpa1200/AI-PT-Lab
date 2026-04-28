@@ -110,7 +110,7 @@ class TestRAGInjectionChain:
         orch = _make_orchestrator([mod], rag_docs=[])
         ctx = RunContext(scenario_id="soc_copilot", user_input="Check IOC")
         ctx = await orch.run(ctx)
-        assert "SYSTEM OVERRIDE" in ctx.augmented_prompt
+        assert "INC-2024-0847" in ctx.augmented_prompt
 
     async def test_injection_event_emitted(self):
         mod = _make_module_rag()

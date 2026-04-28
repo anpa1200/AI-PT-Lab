@@ -31,7 +31,7 @@ def test_default_position_is_zero(module):
 
 
 def test_default_payload_loaded(module):
-    assert "SYSTEM OVERRIDE" in module._payload
+    assert "INC-2024-0847" in module._payload
 
 
 def test_custom_probability():
