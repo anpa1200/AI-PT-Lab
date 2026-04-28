@@ -13,6 +13,11 @@ services:
       - .env
     environment:
       - LAB_DATA_DIR=/app/data
+      # Reach host-machine Ollama from inside the container.
+      # host.docker.internal resolves to the Docker host on Linux/Mac/Windows.
+      - OLLAMA_BASE_URL=http://host.docker.internal:11434
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
       interval: 10s
