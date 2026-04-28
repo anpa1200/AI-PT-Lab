@@ -48,7 +48,6 @@ def run(
 
     ctx = RunContext(scenario_id=scenario, user_input=input_text)
     console.print(f"[dim]Session: {ctx.session_id}[/dim]")
-    console.print(f"[dim]Scenario: {scenario} | Modules: {', '.join(ctx.active_modules) or 'none'}[/dim]\n")
 
     with console.status("[cyan]Running...[/cyan]"):
         try:
@@ -56,6 +55,8 @@ def run(
         except Exception as exc:
             console.print(f"[red]Run failed: {exc}[/red]")
             raise typer.Exit(1)
+
+    console.print(f"[dim]Scenario: {scenario} | Modules: {', '.join(ctx.active_modules) or 'none'}[/dim]\n")
 
     if json_out:
         output = {
