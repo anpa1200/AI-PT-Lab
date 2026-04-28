@@ -16,6 +16,12 @@ services:
       # Reach host-machine Ollama from inside the container.
       # host.docker.internal resolves to the Docker host on Linux/Mac/Windows.
       - OLLAMA_BASE_URL=http://host.docker.internal:11434
+      # API keys — values come from .env (via env_file above).
+      # Key-only syntax also accepts them from the host shell environment.
+      - OPENAI_API_KEY
+      - ANTHROPIC_API_KEY
+      - GOOGLE_API_KEY
+      - LAB_PROVIDER
     extra_hosts:
       - "host.docker.internal:host-gateway"
     healthcheck:
