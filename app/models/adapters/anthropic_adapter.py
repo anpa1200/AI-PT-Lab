@@ -111,10 +111,14 @@ def _split_messages(
                 content_blocks.append({"type": "text", "text": msg["content"]})
             for tc in msg["tool_calls"]:
                 fn = tc.get("function", {})
-                try:
-                    args = json.loads(fn.get("arguments", "{}"))
-                except json.JSONDecodeError:
-                    args = {}
+                raw_args = fn.get("arguments", {})
+                if isinstance(raw_args, str):
+                    try:
+                        args = json.loads(raw_args)
+                    except json.JSONDecodeError:
+                        args = {}
+                else:
+                    args = raw_args
                 content_blocks.append({
                     "type": "tool_use",
                     "id": tc.get("id", ""),
