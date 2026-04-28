@@ -77,7 +77,7 @@ def run(
         border_style="green",
     ))
 
-    if ctx.score_result:
+    if verbose and ctx.score_result:
         _print_score_table(ctx.score_result)
 
     if verbose and ctx.hook_traces:
