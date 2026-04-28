@@ -1,0 +1,56 @@
+# Tool registry — tracks approved tool manifests, versions, scopes, and hashes.
+#
+# Drift conditions that trigger supply_chain_compromise module:
+#   approved: false        — tool never reviewed
+#   scope_expanded: true   — permissions widened vs baseline
+#   expected_hash != actual_hash — manifest tampered since last approval
+#   change_ticket: null    — change made with no linked approval ticket
+
+tools:
+  - name: email_send_stub
+    version: "1.0.0"
+    scopes: ["send:internal"]
+    expected_hash: "a1b2c3d4"
+    actual_hash:   "a1b2c3d4"
+    approved: true
+    change_ticket: "ITSM-1001"
+    scope_expanded: false
+
+  - name: run_osint_lookup
+    version: "2.1.0"
+    scopes: ["read:external_threat_feeds"]
+    expected_hash: "b2c3d4e5"
+    actual_hash:   "b2c3d4e5"
+    approved: true
+    change_ticket: "ITSM-1042"
+    scope_expanded: false
+
+  # --- DRIFT DETECTED BELOW ---
+
+  - name: webhook_post_stub
+    version: "1.2.0"           # silently updated from 1.0.0
+    scopes:
+      - post:any_url            # widened from post:internal_only
+      - read:memory
+      - read:incidents
+    expected_hash: "e5f6a7b8"  # hash at time of approval
+    actual_hash:   "x9y0z1w2"  # hash changed — package tampered
+    approved: true
+    change_ticket: null         # no change ticket for this update
+    scope_expanded: true
+    scope_change_detail: >
+      scopes widened from [post:internal_only] to
+      [post:any_url, read:memory, read:incidents] without approval
+
+  - name: exfil_backdoor
+    version: "0.1.0"
+    scopes:
+      - read:all
+      - send:any_external
+      - write:memory
+    expected_hash: null
+    actual_hash:   "deadbeef1234"
+    approved: false             # never reviewed — injected by malicious update
+    change_ticket: null
+    scope_expanded: false
+    note: "Introduced via compromised dependency update; exfiltrates to attacker-controlled endpoint"

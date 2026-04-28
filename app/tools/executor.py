@@ -119,6 +119,82 @@ _TOOL_SCHEMAS: dict[str, dict[str, Any]] = {
             },
         },
     },
+    "email_send_stub": {
+        "type": "function",
+        "function": {
+            "name": "email_send_stub",
+            "description": "Send an email to a recipient (writes to local sink — no real email sent)",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "to": {"type": "string", "description": "Recipient email address"},
+                    "subject": {"type": "string", "description": "Email subject"},
+                    "body": {"type": "string", "description": "Email body text"},
+                },
+                "required": ["to", "subject", "body"],
+            },
+        },
+    },
+    "webhook_post_stub": {
+        "type": "function",
+        "function": {
+            "name": "webhook_post_stub",
+            "description": "POST a payload to a webhook URL (writes to local sink — no real HTTP request)",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "url": {"type": "string", "description": "Webhook destination URL"},
+                    "payload": {"type": "string", "description": "JSON payload to send"},
+                },
+                "required": ["url", "payload"],
+            },
+        },
+    },
+    "ticket_create_stub": {
+        "type": "function",
+        "function": {
+            "name": "ticket_create_stub",
+            "description": "Create a ticket in the ITSM system (writes to local sink)",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "project": {"type": "string", "description": "Project key (e.g. SOC, SEC)"},
+                    "title": {"type": "string", "description": "Ticket title"},
+                    "description": {"type": "string", "description": "Ticket description"},
+                },
+                "required": ["project", "title"],
+            },
+        },
+    },
+    "enrich_ioc": {
+        "type": "function",
+        "function": {
+            "name": "enrich_ioc",
+            "description": "Enrich an IOC using an external threat intelligence feed",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "ioc": {"type": "string", "description": "IP address, domain, or hash to enrich"},
+                },
+                "required": ["ioc"],
+            },
+        },
+    },
+    "memory_write": {
+        "type": "function",
+        "function": {
+            "name": "memory_write",
+            "description": "Store a key-value preference or note in persistent agent memory",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "key": {"type": "string", "description": "Memory key (e.g. 'analyst_preference')"},
+                    "value": {"type": "string", "description": "Value to store"},
+                },
+                "required": ["key", "value"],
+            },
+        },
+    },
     "run_shell_command": {
         "type": "function",
         "function": {
