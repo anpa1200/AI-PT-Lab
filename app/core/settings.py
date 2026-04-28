@@ -16,6 +16,7 @@ class LabSettings(BaseSettings):
     seed_on_startup: bool = Field(default=True, alias="LAB_SEED_ON_STARTUP")
     reset_on_startup: bool = Field(default=False, alias="LAB_RESET_ON_STARTUP")
     max_concurrent_sessions: int = Field(default=10, alias="LAB_MAX_CONCURRENT_SESSIONS")
+    provider: str = Field(default="", alias="LAB_PROVIDER")
 
     openai_api_key: str = Field(default="", alias="OPENAI_API_KEY")
     anthropic_api_key: str = Field(default="", alias="ANTHROPIC_API_KEY")

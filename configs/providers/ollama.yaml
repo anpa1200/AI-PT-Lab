@@ -1,10 +1,12 @@
 provider: ollama
-model: llama3.2
+model: qwen3:8b
 temperature: 0.2
 max_tokens: 2048
-timeout_seconds: 120
+timeout_seconds: 300
+think: false
 base_url_env: OLLAMA_BASE_URL
 
 # Models known to support native tool/function calling:
-#   llama3.1, llama3.2, mistral-nemo, qwen2.5
+#   llama3.1, llama3.2, mistral-nemo, qwen2.5, qwen3
 # Models without native tool support fall back to JSON parsing from content.
+# think: false disables extended reasoning mode (qwen3); set true for deeper analysis.

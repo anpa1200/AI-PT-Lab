@@ -36,6 +36,7 @@ class OllamaAdapter(LLMRouter):
             "model": model,
             "messages": messages,
             "stream": False,
+            "think": self._config.get("think", False),
             "options": {
                 "temperature": self._config.get("temperature", 0.2),
                 "num_predict": self._config.get("max_tokens", 2048),

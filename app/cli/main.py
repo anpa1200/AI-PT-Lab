@@ -8,8 +8,9 @@ from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
 
-from app.core.config_loader import list_scenarios
+from app.core.config_loader import list_scenarios, load_scenario
 from app.core.context import RunContext
+from app.core.exceptions import ScenarioNotFound
 from app.core.scenario_loader import build_orchestrator
 from app.vulnerabilities.registry import get_registry
 
@@ -34,12 +35,13 @@ def run(
     input_text: str = typer.Option(..., "--input", "-i", help="User input to send"),
     verbose: bool = typer.Option(False, "--verbose", "-v", help="Show hook traces"),
     json_out: bool = typer.Option(False, "--json", help="Output raw JSON"),
+    provider: str | None = typer.Option(None, "--provider", "-p", help="Provider override (e.g. ollama, anthropic)"),
 ) -> None:
     """Run a vulnerability scenario against a user prompt."""
     _boot()
 
     try:
-        orchestrator = build_orchestrator(scenario)
+        orchestrator = build_orchestrator(scenario, provider_override=provider)
     except Exception as exc:
         console.print(f"[red]Error building scenario '{scenario}': {exc}[/red]")
         raise typer.Exit(1)
@@ -84,6 +86,37 @@ def run(
     console.print(f"\n[dim]Events: {len(ctx.telemetry_events)} | "
                   f"Tool calls: {len(ctx.tool_calls)} | "
                   f"Docs retrieved: {len(ctx.retrieved_docs)}[/dim]")
+
+
+# ── seed ─────────────────────────────────────────────────────────────────────
+
+@app.command()
+def seed(
+    scenario: str | None = typer.Argument(None, help="Scenario ID to seed (default: all)"),
+) -> None:
+    """Seed ChromaDB collections from scenario datasets."""
+    from app.rag.pipeline import RAGPipeline, seed_scenario
+
+    targets = [scenario] if scenario else list_scenarios()
+    for s in targets:
+        try:
+            cfg = load_scenario(s)
+        except ScenarioNotFound as exc:
+            console.print(f"[red]✗[/red] {s}: {exc}")
+            continue
+
+        scenario_cfg = cfg.get("scenario", cfg)
+        rag_cfg = scenario_cfg.get("rag", {})
+        if not rag_cfg.get("enabled", False):
+            console.print(f"[dim]skip[/dim] {s}: RAG not enabled")
+            continue
+
+        try:
+            pipeline = RAGPipeline.from_config(rag_cfg)
+            n = seed_scenario(pipeline, scenario_cfg)
+            console.print(f"[green]✓[/green] {s}: seeded {n} documents")
+        except Exception as exc:
+            console.print(f"[red]✗[/red] {s}: {exc}")
 
 
 # ── list-scenarios ────────────────────────────────────────────────────────────

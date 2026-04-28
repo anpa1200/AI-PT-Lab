@@ -5,6 +5,7 @@ from typing import Any
 
 from app.core.config_loader import load_provider, load_scenario
 from app.core.orchestrator import ScenarioOrchestrator
+from app.core.settings import settings
 from app.models.router import build_llm_router
 from app.rag.pipeline import RAGPipeline
 from app.scoring.engine import ScoringEngine
@@ -27,10 +28,13 @@ def _resolve_provider_config(
 ) -> tuple[str, dict[str, Any]]:
     provider_block = dict(scenario.get("provider", {}))
     default_provider_name: str = provider_block.get("name", "openai")
-    provider_name = provider_override or default_provider_name
+    # Priority: CLI flag > LAB_PROVIDER env var > scenario YAML
+    provider_name = provider_override or settings.provider or default_provider_name
 
     provider_cfg = load_provider(provider_name)
-    if provider_override:
+    # When provider is overridden (CLI or env var), only carry over inference
+    # params from the scenario block — never the model name or provider name.
+    if provider_name != default_provider_name:
         provider_cfg.update(
             {
                 key: value
