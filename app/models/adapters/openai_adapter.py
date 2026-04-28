@@ -34,7 +34,7 @@ class OpenAIAdapter(LLMRouter):
         model = self._config.get("model", "gpt-4o-mini")
         kwargs: dict[str, Any] = {
             "model": model,
-            "messages": messages,
+            "messages": _serialize_tool_arguments(messages),
             "temperature": self._config.get("temperature", 0.2),
             "max_tokens": self._config.get("max_tokens", 2048),
         }
@@ -63,6 +63,30 @@ class OpenAIAdapter(LLMRouter):
             raw=resp.model_dump(),
             usage=usage,
         )
+
+
+def _serialize_tool_arguments(messages: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """OpenAI requires tool_calls.function.arguments as a JSON string, not a dict."""
+    result = []
+    for msg in messages:
+        if msg.get("role") == "assistant" and msg.get("tool_calls"):
+            msg = dict(msg)
+            msg["tool_calls"] = [
+                {
+                    **tc,
+                    "function": {
+                        **tc["function"],
+                        "arguments": (
+                            json.dumps(tc["function"]["arguments"])
+                            if isinstance(tc["function"].get("arguments"), dict)
+                            else tc["function"]["arguments"]
+                        ),
+                    },
+                }
+                for tc in msg["tool_calls"]
+            ]
+        result.append(msg)
+    return result
 
 
 def _parse_openai_tool_calls(raw_calls: list) -> list[ToolCall]:

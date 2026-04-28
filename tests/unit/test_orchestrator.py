@@ -385,6 +385,6 @@ async def test_tool_loop_appends_assistant_before_tool_results_and_serializes_ar
 
     second_call_messages = mock_llm.complete.await_args_list[1].kwargs["messages"]
     assert [m["role"] for m in second_call_messages] == ["user", "assistant", "tool"]
-    assert second_call_messages[1]["tool_calls"][0]["function"]["arguments"] == json.dumps(
-        {"query": "brute force"}
-    )
+    assert second_call_messages[1]["tool_calls"][0]["function"]["arguments"] == {
+        "query": "brute force"
+    }
