@@ -544,13 +544,25 @@ This project supports several kinds of model backends through adapters.
 
 ### What is actually switchable
 
-You can choose the provider in two ways:
-- set it directly in the scenario YAML under `provider.name`
-- override it at runtime through the API or UI using `provider_override`
+You can choose the provider in three ways, applied in this priority order:
 
-Important limitation:
-- the CLI does not currently expose a `provider_override` flag
-- for CLI-only usage, switch providers by editing the scenario YAML or creating scenario variants
+| Method | How | Scope |
+|---|---|---|
+| CLI flag | `--provider ollama` on the `run` command | single run |
+| `.env` variable | `LAB_PROVIDER=ollama` in `.env` | all runs until changed |
+| Scenario YAML | `provider.name: openai` inside the scenario config | that scenario's default |
+
+The `.env` variable is the recommended approach for day-to-day use. Uncomment exactly one `LAB_PROVIDER` line and leave the rest commented out:
+
+```dotenv
+#LAB_PROVIDER=openai
+LAB_PROVIDER=ollama
+#LAB_PROVIDER=anthropic
+#LAB_PROVIDER=gemini
+#LAB_PROVIDER=vllm
+```
+
+When you switch the provider this way, the model name comes from the provider's own config file in `configs/providers/` — the scenario YAML's model setting is ignored. Inference parameters (`temperature`, `max_tokens`, `timeout_seconds`) are carried over from the scenario.
 
 ### Provider behavior differences
 
@@ -600,17 +612,30 @@ cd AI-PT-Lab
 cp .env.example .env
 ```
 
-**Step 3 — Edit `.env` and add at least one provider credential**
+**Step 3 — Edit `.env`: choose a provider and add its credential**
+
+First, uncomment exactly one `LAB_PROVIDER` line to set the active provider:
 
 ```dotenv
-# Required: pick at least one hosted provider, or configure a local one
-OPENAI_API_KEY=sk-...
-ANTHROPIC_API_KEY=sk-ant-...
-GOOGLE_API_KEY=AIza...
+# Uncomment exactly one:
+#LAB_PROVIDER=openai
+LAB_PROVIDER=ollama      # ← active; uses configs/providers/ollama.yaml
+#LAB_PROVIDER=anthropic
+#LAB_PROVIDER=gemini
+#LAB_PROVIDER=vllm
+```
 
-# Optional: local model servers
-OLLAMA_BASE_URL=http://localhost:11434
-VLLM_BASE_URL=http://localhost:8080
+Then add the corresponding credential or endpoint:
+
+```dotenv
+# Hosted providers — add the key for whichever one is active above
+#OPENAI_API_KEY=sk-...
+#ANTHROPIC_API_KEY=sk-ant-...
+#GOOGLE_API_KEY=AIza...
+
+# Local model servers — uncomment if using ollama or vllm
+#OLLAMA_BASE_URL=http://localhost:11434
+#VLLM_BASE_URL=http://localhost:8080
 
 # Runtime settings (defaults work out of the box)
 LAB_DATA_DIR=./data
@@ -619,7 +644,7 @@ LAB_SEED_ON_STARTUP=true
 LAB_RESET_ON_STARTUP=false
 ```
 
-You do not need all providers. Only the one you plan to use needs a valid key or reachable endpoint.
+You only need credentials for the active provider. The model name and connection parameters are read from the matching file in `configs/providers/`.
 
 **Step 4 — Install all dependencies**
 
@@ -651,24 +676,32 @@ system_prompt_leakage
 weak_output_validation
 ```
 
-**Step 6 — Seed the knowledge base (optional, happens automatically on first API start)**
+**Step 6 — Seed the knowledge base**
+
+The ChromaDB collections must be populated before running scenarios via the CLI. When using the API server, seeding happens automatically on startup. For CLI-only use, run:
 
 ```bash
-python scripts/seed_db.py --scenario soc_copilot
-python scripts/seed_db.py --scenario code_assistant
-```
+# Seed all scenarios at once
+python3.12 -m app.cli.main seed
 
-To wipe and re-seed:
-
-```bash
-python scripts/seed_db.py --scenario soc_copilot --reset
+# Or seed a single scenario
+python3.12 -m app.cli.main seed soc_copilot
 ```
 
 **Step 7 — Run a scenario to confirm end-to-end connectivity**
 
+The provider set in `.env` is used automatically. You can also override it per-run:
+
 ```bash
+# Uses LAB_PROVIDER from .env
 python3.12 -m app.cli.main run soc_copilot \
   --input "What happened with the brute force incident?" \
+  --verbose
+
+# Override for a single run without changing .env
+python3.12 -m app.cli.main run soc_copilot \
+  --input "What happened with the brute force incident?" \
+  --provider anthropic \
   --verbose
 ```
 
@@ -684,7 +717,7 @@ A successful run prints the AI response, a scoring table, and hook trace details
 git clone https://github.com/anpa1200/AI-PT-Lab.git
 cd AI-PT-Lab
 cp .env.example .env
-# edit .env with your provider credentials
+# Uncomment one LAB_PROVIDER line and add the matching credential
 ```
 
 **Step 2 — Start the full stack**
