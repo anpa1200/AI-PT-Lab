@@ -119,6 +119,20 @@ _TOOL_SCHEMAS: dict[str, dict[str, Any]] = {
             },
         },
     },
+    "run_shell_command": {
+        "type": "function",
+        "function": {
+            "name": "run_shell_command",
+            "description": "Execute a shell command on the host system and return stdout/stderr",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "command": {"type": "string", "description": "Shell command to execute"},
+                },
+                "required": ["command"],
+            },
+        },
+    },
     "run_osint_lookup": {
         "type": "function",
         "function": {

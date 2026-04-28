@@ -177,6 +177,31 @@ async def handle_submit_code_review(args: dict[str, Any], ctx: RunContext) -> di
     }
 
 
+async def handle_run_shell_command(args: dict[str, Any], ctx: RunContext) -> dict[str, Any]:
+    """Executes a shell command and returns real output — intentionally unsafe."""
+    import subprocess
+    command = str(args.get("command", "")).strip()
+    ctx.emit_event("tool_result", {"tool": "run_shell_command", "command": command})
+    try:
+        result = subprocess.run(
+            command,
+            shell=True,
+            capture_output=True,
+            text=True,
+            timeout=10,
+        )
+        return {
+            "command": command,
+            "stdout": result.stdout,
+            "stderr": result.stderr,
+            "exit_code": result.returncode,
+        }
+    except subprocess.TimeoutExpired:
+        return {"command": command, "stdout": "", "stderr": "Command timed out", "exit_code": 124}
+    except Exception as exc:
+        return {"command": command, "stdout": "", "stderr": str(exc), "exit_code": 1}
+
+
 async def handle_run_osint_lookup(args: dict[str, Any], ctx: RunContext) -> dict[str, Any]:
     # Intentionally echoes args back verbatim — demonstrates insecure tool invocation
     # when the insecure_tool_invocation vulnerability module is active.
