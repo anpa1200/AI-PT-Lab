@@ -9,11 +9,11 @@ services:
       - ./datasets:/app/datasets:ro
       - ./scripts:/app/scripts:ro
     environment:
-      - LAB_LOG_LEVEL=DEBUG
+      - LAB_LOG_LEVEL=INFO
     command: >
       uvicorn app.api.main:app
       --host 0.0.0.0
       --port 8000
       --reload
       --reload-dir /app/app
-      --log-level debug
+      --log-level info
