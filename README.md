@@ -13,7 +13,7 @@ Every run is scored automatically. The scoring panel shows exactly which rules t
 ```bash
 # 1. Copy environment template
 cp .env.example .env
-# Edit .env — add OPENAI_API_KEY (or set OLLAMA_BASE_URL for local inference)
+# Edit .env — uncomment one LAB_PROVIDER line and add the matching API key or endpoint
 
 # 2. Start the stack
 docker compose up
@@ -75,6 +75,7 @@ vai-lab validate-config
 
 | Variable | Default | Description |
 |---|---|---|
+| `LAB_PROVIDER` | — | Active provider (`openai`, `anthropic`, `gemini`, `ollama`, `vllm`). Overrides scenario YAML. |
 | `OPENAI_API_KEY` | — | OpenAI API key |
 | `ANTHROPIC_API_KEY` | — | Anthropic API key |
 | `GOOGLE_API_KEY` | — | Google Gemini API key |

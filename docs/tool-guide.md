@@ -1038,7 +1038,8 @@ Provider file:
 
 Current defaults:
 - provider: `ollama`
-- model: `llama3.2`
+- model: `qwen3:8b`
+- timeout: 300s (`think: false` disables extended reasoning to avoid multi-minute waits)
 
 Required environment:
 
@@ -1056,7 +1057,7 @@ Local setup example:
 
 ```bash
 ollama serve
-ollama pull llama3.2
+ollama pull qwen3:8b
 ```
 
 Example scenario config:
@@ -1064,7 +1065,7 @@ Example scenario config:
 ```yaml
 provider:
   name: ollama
-  model: llama3.2
+  model: qwen3:8b
   temperature: 0.1
   max_tokens: 2048
 ```
@@ -1206,15 +1207,29 @@ curl -X POST http://localhost:8000/api/v1/run \
 ```
 
 If you use the CLI:
-- there is no provider override flag today
-- either edit the `provider` block in the scenario YAML
-- or create a second scenario file pointing to a different provider
+- use the `--provider` flag to override the provider for a single run:
+
+```bash
+python3.12 -m app.cli.main run soc_copilot \
+  --input "Check IOC 185.220.101.47" \
+  --provider anthropic \
+  --verbose
+```
+
+- or set `LAB_PROVIDER` in `.env` to change the default for all runs without editing scenario YAML
 
 ### Multi-provider `.env` example
 
 If you want one workstation to be able to switch among several vendors and local backends, a practical `.env` looks like this:
 
 ```dotenv
+# Active provider — uncomment exactly one:
+#LAB_PROVIDER=openai
+LAB_PROVIDER=ollama
+#LAB_PROVIDER=anthropic
+#LAB_PROVIDER=gemini
+#LAB_PROVIDER=vllm
+
 LAB_DATA_DIR=./data
 LAB_SEED_ON_STARTUP=true
 
@@ -1226,7 +1241,7 @@ OLLAMA_BASE_URL=http://localhost:11434
 VLLM_BASE_URL=http://localhost:8080
 ```
 
-You do not need to populate every variable. Only the selected provider needs valid credentials or a reachable local endpoint.
+You do not need to populate every variable. Only the selected provider needs valid credentials or a reachable local endpoint. Switch providers by moving the uncommented `LAB_PROVIDER` line — no scenario YAML edits needed.
 
 ### Recommended Usage Patterns
 
