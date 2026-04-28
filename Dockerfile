@@ -8,6 +8,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
+# Install CPU-only torch first so pip reuses it instead of pulling the
+# 530 MB CUDA wheel when sentence-transformers is resolved later.
+RUN pip install --no-cache-dir \
+    torch \
+    --index-url https://download.pytorch.org/whl/cpu
+
 # Install Python deps before copying source (better layer caching).
 # README.md is required by hatchling during metadata generation.
 COPY pyproject.toml README.md ./
