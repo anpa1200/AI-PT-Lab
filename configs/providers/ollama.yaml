@@ -2,7 +2,7 @@ provider: ollama
 model: qwen3:8b
 temperature: 0.2
 max_tokens: 2048
-timeout_seconds: 300
+timeout_seconds: 600
 think: false
 base_url_env: OLLAMA_BASE_URL
 

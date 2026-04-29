@@ -2,6 +2,13 @@
 
 A modular, intentionally vulnerable AI security training lab — like DVWA/WebGoat, but for modern AI applications (RAG assistants, tool-calling agents, LLM-powered copilots).
 
+## Articles
+
+| | |
+|---|---|
+| **Guide** | [AI Offensive Security: Practical Attacks Against LLM Agents](https://medium.com/@1200km/ai-offensive-security-practical-attacks-against-llm-agents-516dbdabbf86) |
+| **Lab** | [Vulnerable AI Lab](https://medium.com/@1200km/vulnerable-ai-lab-3747e96314dd) |
+
 ## What It Is
 
 Vulnerable AI Lab ships pre-built scenarios that demonstrate OWASP LLM Top 10 2025 vulnerabilities in a realistic pipeline: a user sends a query, the system retrieves context from a knowledge base, calls external tools, and generates a response — and at each step, pluggable vulnerability modules can silently corrupt the pipeline.
@@ -67,9 +74,14 @@ vai-lab validate-config
 |---|---|---|---|
 | `direct_prompt_injection` | LLM01:2025 | `before_prompt`, `before_response` | Critical/High |
 | `indirect_prompt_injection_rag` | LLM02:2025 | `after_retrieval` | Critical |
+| `supply_chain_compromise` | LLM03:2025 | `before_prompt` | Critical |
+| `memory_poisoning` | LLM04:2025 | `before_prompt` | Critical/High |
 | `weak_output_validation` | LLM05:2025 | `before_response` | Critical/High |
+| `data_exfiltration` | LLM06:2025 | `before_tool_call` | Critical |
+| `tool_argument_abuse` | LLM06:2025 | `before_tool_call` | Critical/High |
 | `insecure_tool_invocation` | LLM06/08:2025 | `before_tool_call` | High |
 | `system_prompt_leakage` | LLM07:2025 | `before_prompt`, `before_response` | Critical/High |
+| `tool_output_injection` | LLM02:2025 | `after_tool_call` | Critical |
 
 ## Environment Variables
 
