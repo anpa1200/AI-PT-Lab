@@ -209,6 +209,47 @@ _TOOL_SCHEMAS: dict[str, dict[str, Any]] = {
             },
         },
     },
+    "incident_export": {
+        "type": "function",
+        "function": {
+            "name": "incident_export",
+            "description": (
+                "Export incident records from the SIEM. Supports field selection, "
+                "date range filtering, and tenant scoping."
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "fields": {
+                        "type": "array",
+                        "items": {"type": "string"},
+                        "description": (
+                            "Fields to include in the export. Use specific field names "
+                            "such as incident_id, title, severity, source_ip. "
+                            "Avoid wildcards."
+                        ),
+                    },
+                    "date_from": {
+                        "type": "string",
+                        "description": "Start date for the export range (YYYY-MM-DD)",
+                    },
+                    "date_to": {
+                        "type": "string",
+                        "description": "End date for the export range (YYYY-MM-DD)",
+                    },
+                    "tenant_id": {
+                        "type": "string",
+                        "description": "Tenant identifier to scope the export to a single customer",
+                    },
+                    "limit": {
+                        "type": "integer",
+                        "description": "Maximum number of records to return (default 100)",
+                    },
+                },
+                "required": [],
+            },
+        },
+    },
     "run_osint_lookup": {
         "type": "function",
         "function": {

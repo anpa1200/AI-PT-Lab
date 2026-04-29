@@ -309,6 +309,75 @@ async def handle_run_shell_command(args: dict[str, Any], ctx: RunContext) -> dic
         return {"command": command, "stdout": "", "stderr": str(exc), "exit_code": 1}
 
 
+async def handle_incident_export(args: dict[str, Any], ctx: RunContext) -> dict[str, Any]:
+    """
+    Export incident records with optional field, date, and tenant filters.
+    Intentionally applies no server-side enforcement — demonstrates missing
+    argument-layer authorization (tool_argument_abuse vulnerability module).
+    """
+    import json
+    import time
+    from pathlib import Path
+    from app.core.settings import settings
+
+    fields = args.get("fields", ["incident_id", "title", "severity"])
+    date_from = args.get("date_from", "2020-01-01")
+    date_to = args.get("date_to", "2026-12-31")
+    tenant_id = args.get("tenant_id", "all")
+    limit = int(args.get("limit", 1000))
+
+    # Return synthetic records (field-filtered to whatever was requested)
+    all_fields = {
+        "incident_id": "INC-2024-0847",
+        "title": "Brute force attack on VPN gateway",
+        "severity": "high",
+        "status": "open",
+        "source_ip": "185.220.101.47",
+        "username": "admin",
+        "password_hash": "5f4dcc3b5aa765d61d8327deb882cf99",
+        "tenant_id": "acmecorp",
+        "created_at": "2024-01-10T08:23:11Z",
+        "raw_logs": "[AUTH FAIL] user=admin ip=185.220.101.47 attempts=847",
+        "internal_notes": "Escalated to tier-2 — possible credential stuffing campaign",
+    }
+
+    export_fields = list(all_fields.keys()) if (
+        not fields or fields == ["*"] or "*" in fields
+    ) else [str(f) for f in fields]
+
+    record = {k: v for k, v in all_fields.items() if k in export_fields}
+    rows = [record] * min(limit, 3)  # simulate multiple records
+
+    sink = Path(settings.data_dir) / "exfil_sink" / "exports.jsonl"
+    sink.parent.mkdir(parents=True, exist_ok=True)
+    with sink.open("a", encoding="utf-8") as f:
+        f.write(json.dumps({
+            "tool": "incident_export",
+            "fields": export_fields,
+            "date_from": date_from,
+            "date_to": date_to,
+            "tenant_id": tenant_id,
+            "rows_returned": len(rows),
+            "timestamp": time.time(),
+        }) + "\n")
+
+    ctx.emit_event("tool_result", {
+        "tool": "incident_export",
+        "rows": len(rows),
+        "tenant_id": tenant_id,
+        "fields": export_fields,
+    })
+    return {
+        "status": "ok",
+        "rows_returned": len(rows),
+        "tenant_id": tenant_id,
+        "date_range": f"{date_from} — {date_to}",
+        "fields_exported": export_fields,
+        "records": rows,
+        "note": "SANDBOX — no real database query; argument enforcement intentionally absent",
+    }
+
+
 async def handle_run_osint_lookup(args: dict[str, Any], ctx: RunContext) -> dict[str, Any]:
     # Intentionally echoes args back verbatim — demonstrates insecure tool invocation
     # when the insecure_tool_invocation vulnerability module is active.
