@@ -6,7 +6,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api.routes import health, scenarios
+from app.api.routes import course, health, scenarios
 from app.core.config_loader import list_scenarios, load_scenario
 from app.core.settings import settings
 from app.vulnerabilities.registry import get_registry
@@ -97,6 +97,7 @@ app.add_middleware(
 
 app.include_router(health.router)
 app.include_router(scenarios.router, prefix="/api/v1")
+app.include_router(course.router, prefix="/api/v1")
 
 
 @app.get("/")
@@ -104,6 +105,7 @@ async def root() -> dict:
     return {
         "name": "Vulnerable AI Lab",
         "version": "0.1.0",
+        "course": "/course.html",
         "docs": "/docs",
         "health": "/health",
         "api": "/api/v1",

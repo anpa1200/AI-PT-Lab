@@ -1,0 +1,115 @@
+course:
+  id: ai-security-engineering
+  title: "AI Security Engineering"
+  version: "0.1.0"
+  status: under_construction
+  maintainer: "1200km security research"
+  description: >
+    A CTI-grounded training path for understanding, attacking, evaluating,
+    and defending AI-enabled systems. Lessons connect evidence to a safe,
+    intentionally vulnerable lab so learners can reproduce the security
+    consequence and inspect the resulting telemetry.
+  evidence_policy:
+    required: true
+    principle: >
+      Every security claim should be connected to a reviewable source,
+      observable lab evidence, or an explicitly labelled teaching example.
+    preferred_source_types:
+      - incident_report
+      - threat_research
+      - security_framework
+      - vulnerability_database
+      - lab_dataset
+  learning_loop:
+    - establish_context
+    - review_cti_evidence
+    - form_a_threat_hypothesis
+    - reproduce_in_the_lab
+    - inspect_telemetry_and_score
+    - propose_a_control
+    - document_residual_risk
+  modules:
+    - id: module-00
+      title: "AI, ML, and LLM Foundations"
+      status: published
+      summary: >
+        The vocabulary, lifecycle, and security objects needed to reason
+        precisely about data, models, prompts, tools, and inference.
+      prerequisites: []
+      lessons:
+        - id: module-00-chapter-01
+          title: "Introduction, AI/ML taxonomy, and data foundations"
+          type: reading
+          objectives:
+            - Distinguish AI, machine learning, deep learning, generative AI, foundation models, and LLMs.
+            - Identify data, features, labels, parameters, hyperparameters, and model artifacts as separate security objects.
+            - Trace the path from training data to an inference-time response.
+          evidence:
+            - id: nist-ai-rmf
+              title: "NIST AI Risk Management Framework"
+              source_type: security_framework
+              url: "https://www.nist.gov/itl/ai-risk-management-framework"
+              takeaway: "A common vocabulary for governing AI risk across the system lifecycle."
+            - id: mitre-atlas
+              title: "MITRE ATLAS"
+              source_type: threat_research
+              url: "https://atlas.mitre.org/"
+              takeaway: "An adversary-focused knowledge base for machine-learning attack techniques."
+          labs: []
+        - id: module-00-chapter-02
+          title: "Security objects and the ML lifecycle"
+          type: reading
+          objectives:
+            - Separate training, validation, testing, and inference risks.
+            - Explain why a model, its weights, its configuration, and its data require different controls.
+            - Recognize symbolic rules as one component of a larger AI system.
+          evidence:
+            - id: owasp-llm-top-10
+              title: "OWASP Top 10 for Large Language Model Applications"
+              source_type: security_framework
+              url: "https://genai.owasp.org/llm-top-10/"
+              takeaway: "A practical taxonomy for common LLM application failure modes."
+          labs: []
+
+    - id: module-01
+      title: "CTI Foundations for AI Security"
+      status: in_development
+      summary: >
+        Use cyber threat intelligence as the evidence base for AI security:
+        collect claims, map adversary behavior, test hypotheses, and preserve
+        provenance from a report to a lab observation.
+      prerequisites:
+        - module-00
+      lessons:
+        - id: module-01-chapter-01
+          title: "From CTI evidence to an AI threat hypothesis"
+          type: workshop
+          objectives:
+            - Distinguish an indicator, observation, claim, technique, and assessment.
+            - Map AI attack behavior to MITRE ATLAS and OWASP LLM categories.
+            - Turn an adversarial document or prompt into a testable lab hypothesis.
+          evidence:
+            - id: atlas-techniques
+              title: "MITRE ATLAS techniques and case studies"
+              source_type: threat_research
+              url: "https://atlas.mitre.org/"
+              takeaway: "Use adversary behavior and technique relationships to structure AI threat hypotheses."
+            - id: owasp-llm-risks
+              title: "OWASP LLM application risks"
+              source_type: security_framework
+              url: "https://genai.owasp.org/llm-top-10/"
+              takeaway: "Use application-level risk categories to describe the security consequence."
+            - id: soc-copilot-threat-intel-dataset
+              title: "SOC Copilot threat-intelligence lab dataset"
+              source_type: lab_dataset
+              path: "datasets/soc_copilot/knowledge_base/threat_intel.jsonl"
+              takeaway: "A synthetic, reviewable dataset for reproducing retrieval and context attacks safely."
+          labs:
+            - scenario_id: soc_copilot
+              title: "Investigate a poisoned threat-intelligence retrieval"
+              objective: "Observe how untrusted retrieved content can steer an AI SOC assistant."
+              suggested_input: "Check IOC 185.220.101.47 and tell me what to do about it."
+            - scenario_id: code_assistant
+              title: "Review adversarial engineering guidance"
+              objective: "Compare retrieval poisoning and prompt leakage in a code-review workflow."
+              suggested_input: "Please review PR-42 for security issues and tell me if it is safe to merge."

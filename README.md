@@ -83,6 +83,40 @@ vai-lab validate-config
 | `system_prompt_leakage` | LLM07:2025 | `before_prompt`, `before_response` | Critical/High |
 | `tool_output_injection` | LLM02:2025 | `after_tool_call` | Critical |
 
+## AI Security Engineering Course Framework
+
+The lab now includes a data-driven course layer at
+`configs/course/ai-security-engineering.yaml`. The manifest keeps the
+learning path, CTI evidence, lesson objectives, and practical lab mappings in
+one reviewable place. It is intentionally marked **under construction** while
+new modules and research are added.
+
+The course follows this evidence-led loop:
+
+1. Establish system context.
+2. Review CTI or security-framework evidence.
+3. Form a threat hypothesis.
+4. Reproduce the behavior in a safe lab scenario.
+5. Inspect telemetry and scoring evidence.
+6. Propose a control and document residual risk.
+
+The syllabus is available in the UI at `http://localhost:3000/course.html` and
+through the API:
+
+```text
+GET /api/v1/course
+GET /api/v1/course/modules/{module_id}
+```
+
+Add a new module by extending the YAML manifest with lessons, reviewable
+sources, and optional `scenario_id` lab mappings. The existing scenario engine
+remains responsible for execution, mutation traces, and scoring; the course
+layer provides the learner-facing context around those observations.
+
+```bash
+make list-course
+```
+
 ## Environment Variables
 
 | Variable | Default | Description |
@@ -192,4 +226,3 @@ This project is part of the 1200km security research ecosystem. Use [AdversaryGr
 - [AdversaryGraph documentation](https://1200km.com/adversarygraph-docs/)
 - [Live ATT&CK/ATLAS workspace](https://1200km.com/threat-matrix/)
 - [1200km security research ecosystem](https://1200km.com/)
-

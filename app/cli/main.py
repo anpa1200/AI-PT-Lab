@@ -12,6 +12,7 @@ from app.core.config_loader import list_scenarios, load_scenario
 from app.core.context import RunContext
 from app.core.exceptions import ScenarioNotFound
 from app.core.scenario_loader import build_orchestrator
+from app.course.catalog import list_course_modules, load_course
 from app.vulnerabilities.registry import get_registry
 
 app = typer.Typer(
@@ -153,6 +154,27 @@ def list_modules_cmd() -> None:
     console.print(table)
 
 
+# ── list-course ──────────────────────────────────────────────────────────────
+
+@app.command(name="list-course")
+def list_course_cmd() -> None:
+    """List the modules in the AI Security Engineering course."""
+    course = load_course()
+    table = Table(title=course["title"], show_header=True)
+    table.add_column("Module ID", style="cyan")
+    table.add_column("Title")
+    table.add_column("Status", style="yellow")
+    table.add_column("Lessons", justify="right")
+    for module in list_course_modules():
+        table.add_row(
+            module["id"],
+            module["title"],
+            module.get("status", "draft"),
+            str(len(module.get("lessons", []))),
+        )
+    console.print(table)
+
+
 # ── validate-config ───────────────────────────────────────────────────────────
 
 @app.command(name="validate-config")
@@ -172,6 +194,12 @@ def validate_config(
             errors.append(s)
     if errors:
         raise typer.Exit(1)
+    try:
+        course = load_course()
+        console.print(f"[green]✓[/green] course: {course['id']} ({course['version']})")
+    except Exception as exc:
+        console.print(f"[red]✗[/red] course: {exc}")
+        raise typer.Exit(1) from exc
 
 
 # ── Helpers ───────────────────────────────────────────────────────────────────

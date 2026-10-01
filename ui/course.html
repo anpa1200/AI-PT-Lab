@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Security Engineering Course</title>
+  <style>
+    :root {
+      --bg: #0d1117;
+      --card: #161b22;
+      --border: #30363d;
+      --text: #c9d1d9;
+      --muted: #8b949e;
+      --accent: #58a6ff;
+      --green: #3fb950;
+      --orange: #e3b341;
+      --red: #f85149;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font: 14px/1.55 'Courier New', monospace;
+    }
+    a { color: var(--accent); }
+    .topbar {
+      border-bottom: 1px solid var(--border);
+      padding: 14px 24px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    .topbar strong { color: var(--accent); letter-spacing: 1px; }
+    .topbar a:last-child { margin-left: auto; }
+    main { width: min(1100px, calc(100% - 32px)); margin: 0 auto; padding: 42px 0 64px; }
+    .eyebrow { color: var(--green); text-transform: uppercase; letter-spacing: 1px; font-size: 11px; }
+    h1 { font-size: clamp(28px, 5vw, 48px); line-height: 1.1; margin: 10px 0 18px; color: #f0f6fc; }
+    h2 { color: #f0f6fc; margin: 0 0 10px; }
+    h3 { color: #f0f6fc; margin: 0 0 8px; }
+    .lede { max-width: 780px; color: var(--muted); font-size: 16px; }
+    .notice {
+      border: 1px solid var(--orange);
+      border-radius: 6px;
+      background: #2b2110;
+      color: #f0d58a;
+      padding: 12px 14px;
+      margin: 24px 0 34px;
+    }
+    .loop { display: flex; flex-wrap: wrap; gap: 8px; margin: 14px 0 34px; }
+    .loop span { border: 1px solid var(--border); border-radius: 999px; padding: 5px 10px; color: var(--muted); font-size: 11px; }
+    .module { border: 1px solid var(--border); border-radius: 8px; background: var(--card); padding: 22px; margin-top: 18px; }
+    .module-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
+    .module-id, .lesson-type { color: var(--accent); font-size: 11px; text-transform: uppercase; letter-spacing: .8px; }
+    .status { color: var(--green); font-size: 11px; text-transform: uppercase; }
+    .status.in_development { color: var(--orange); }
+    .lesson { border-top: 1px solid var(--border); margin-top: 18px; padding-top: 18px; }
+    .lesson p, li { color: var(--muted); }
+    .lesson-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 14px; margin-top: 14px; }
+    .panel { border: 1px solid var(--border); border-radius: 6px; padding: 13px; }
+    .panel h4 { margin: 0 0 8px; color: #f0f6fc; font-size: 12px; text-transform: uppercase; }
+    ul { padding-left: 20px; margin: 7px 0 0; }
+    .source, .lab { border-left: 3px solid var(--accent); padding: 7px 10px; margin-top: 9px; background: #0d1117; }
+    .source strong, .lab strong { color: #f0f6fc; }
+    .source small, .lab small { display: block; color: var(--muted); margin-top: 3px; }
+    .lab { border-left-color: var(--red); }
+    .lab a { display: inline-block; margin-top: 7px; border: 1px solid var(--border); border-radius: 4px; padding: 4px 8px; text-decoration: none; font-size: 11px; }
+    .empty { color: var(--muted); }
+    footer { border-top: 1px solid var(--border); color: var(--muted); margin-top: 42px; padding-top: 18px; font-size: 12px; }
+    @media (max-width: 640px) { .topbar { padding: 12px 14px; } main { width: min(100% - 22px, 1100px); padding-top: 28px; } .module-head { display: block; } .status { display: block; margin-top: 8px; } }
+  </style>
+</head>
+<body>
+  <nav class="topbar">
+    <strong>VULNERABLE AI LAB</strong>
+    <a href="/">Open lab</a>
+  </nav>
+  <main>
+    <div class="eyebrow">Training framework · evidence-led · practical</div>
+    <h1 id="course-title">AI Security Engineering</h1>
+    <p class="lede" id="course-description">Loading course catalogue…</p>
+    <div class="notice"><strong>UNDER CONSTRUCTION:</strong> syllabus and exercises will evolve as new CTI research, case studies, and lab scenarios are added.</div>
+    <h2>Learning loop</h2>
+    <div class="loop" id="learning-loop"></div>
+    <h2>Syllabus</h2>
+    <section id="modules"><p class="empty">Loading modules…</p></section>
+    <footer>Every security claim in this course should be traceable to a reviewable source or observable lab evidence.</footer>
+  </main>
+  <script>
+    'use strict';
+    const escapeHtml = value => String(value ?? '').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+    const list = values => (values || []).map(value => `<li>${escapeHtml(value)}</li>`).join('');
+    const sourceCard = source => `<div class="source"><strong>${escapeHtml(source.title)}</strong><small>${escapeHtml(source.takeaway || source.source_type || '')}</small>${source.url ? `<a href="${escapeHtml(source.url)}" target="_blank" rel="noopener noreferrer">Review source ↗</a>` : ''}</div>`;
+    const labCard = lab => `<div class="lab"><strong>${escapeHtml(lab.title)}</strong><small>${escapeHtml(lab.objective)}</small><a href="/?scenario=${encodeURIComponent(lab.scenario_id)}">Open ${escapeHtml(lab.scenario_id)} lab ↗</a></div>`;
+    const lessonCard = lesson => `<article class="lesson"><div class="lesson-type">${escapeHtml(lesson.type || 'lesson')}</div><h3>${escapeHtml(lesson.title)}</h3><div class="lesson-grid"><div class="panel"><h4>Objectives</h4><ul>${list(lesson.objectives)}</ul></div><div class="panel"><h4>CTI and reference evidence</h4>${(lesson.evidence || []).map(sourceCard).join('') || '<p class="empty">Evidence will be added before publication.</p>'}</div></div>${lesson.labs?.length ? `<div class="panel" style="margin-top:14px"><h4>Practical labs</h4>${lesson.labs.map(labCard).join('')}</div>` : ''}</article>`;
+    const moduleCard = module => `<article class="module"><div class="module-head"><div><div class="module-id">${escapeHtml(module.id)}</div><h2>${escapeHtml(module.title)}</h2></div><div class="status ${escapeHtml(module.status)}">${escapeHtml((module.status || '').replaceAll('_',' '))}</div></div><p>${escapeHtml(module.summary)}</p>${module.prerequisites?.length ? `<p><strong>Prerequisites:</strong> ${module.prerequisites.map(escapeHtml).join(', ')}</p>` : ''}${(module.lessons || []).map(lessonCard).join('')}</article>`;
+    async function init() {
+      try {
+        const response = await fetch('/api/v1/course');
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const course = await response.json();
+        document.title = `${course.title} · Vulnerable AI Lab`;
+        document.getElementById('course-title').textContent = course.title;
+        document.getElementById('course-description').textContent = course.description;
+        document.getElementById('learning-loop').innerHTML = (course.learning_loop || []).map(item => `<span>${escapeHtml(item.replaceAll('_',' '))}</span>`).join('');
+        document.getElementById('modules').innerHTML = (course.modules || []).map(moduleCard).join('');
+      } catch (error) {
+        document.getElementById('modules').innerHTML = `<p class="empty">Unable to load course catalogue: ${escapeHtml(error.message)}</p>`;
+      }
+    }
+    init();
+  </script>
+</body>
+</html>

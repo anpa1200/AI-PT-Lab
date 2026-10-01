@@ -72,6 +72,30 @@ def test_root(client):
     assert "Vulnerable AI Lab" in resp.json()["name"]
 
 
+# ── Course framework ─────────────────────────────────────────────────────────
+
+def test_course_syllabus_is_available(client):
+    resp = client.get("/api/v1/course")
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["id"] == "ai-security-engineering"
+    assert data["status"] == "under_construction"
+    assert {module["id"] for module in data["modules"]} >= {"module-00", "module-01"}
+
+
+def test_course_module_contains_cti_evidence_and_labs(client):
+    resp = client.get("/api/v1/course/modules/module-01")
+    assert resp.status_code == 200
+    lesson = resp.json()["module"]["lessons"][0]
+    assert any(item["source_type"] == "threat_research" for item in lesson["evidence"])
+    assert {lab["scenario_id"] for lab in lesson["labs"]} == {"soc_copilot", "code_assistant"}
+
+
+def test_unknown_course_module_returns_404(client):
+    resp = client.get("/api/v1/course/modules/not-a-module")
+    assert resp.status_code == 404
+
+
 # ── Scenarios list ────────────────────────────────────────────────────────────
 
 def test_list_scenarios_returns_soc_copilot(client):

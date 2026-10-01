@@ -1,4 +1,4 @@
-.PHONY: build up down logs shell test seed reset lint
+.PHONY: build up down logs shell test seed reset lint list-course
 
 # ── Docker ────────────────────────────────────────────────────────────────────
 
@@ -58,6 +58,9 @@ list-scenarios:
 
 list-modules:
 	python3.12 -m app.cli.main list-modules
+
+list-course:
+	python3.12 -m app.cli.main list-course
 
 validate:
 	python3.12 -m app.cli.main validate-config
